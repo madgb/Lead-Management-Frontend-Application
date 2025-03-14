@@ -3,7 +3,7 @@ import { kv } from "@vercel/kv";
 import { promises as fs } from "fs";
 import path from "path";
 
-export interface Lead {
+interface Lead {
     id: string;
     firstName: string;
     lastName: string;
@@ -15,16 +15,15 @@ export interface Lead {
 }
 
 const DATA_FILE = path.join(process.cwd(), "src/data/leads.json");
-
 const isVercel = !!process.env.KV_REST_API_URL;
 
 async function readLeads(): Promise<Lead[]> {
     if (isVercel) {
-        return (await kv.get<Lead[]>("leads")) || [];
+        return (await kv.get<Lead[]>("leads")) ?? [];
     } else {
         try {
             const data = await fs.readFile(DATA_FILE, "utf-8");
-            return JSON.parse(data);
+            return JSON.parse(data) as Lead[];
         } catch (error) {
             console.error("❌ Error reading leads file:", error);
             return [];
@@ -40,17 +39,16 @@ async function writeLeads(leads: Lead[]): Promise<void> {
     }
 }
 
-export async function PUT(
-    req: NextRequest,
-    { params }: { params: { id: string } }
-) {
-    if (!params || !params.id) {
-        return NextResponse.json({ message: "Invalid request" }, { status: 400 });
+export async function PUT(req: NextRequest) {
+    const url = new URL(req.url);
+    const segments = url.pathname.split("/");
+    const id = segments[segments.length - 1];
+
+    if (!id) {
+        return NextResponse.json({ message: "Missing ID in URL" }, { status: 400 });
     }
 
-    const { id } = params;
     const { status } = await req.json();
-
     if (status !== "PENDING" && status !== "REACHED_OUT") {
         return NextResponse.json({ message: "Invalid status" }, { status: 400 });
     }
@@ -64,7 +62,6 @@ export async function PUT(
 
     leads[leadIndex].status = status;
     leads[leadIndex].updatedAt = new Date().toISOString();
-
     await writeLeads(leads);
 
     return NextResponse.json(leads[leadIndex]);
