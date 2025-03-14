@@ -1,0 +1,128 @@
+.errorMessage {
+  color: red;
+}
+
+.formContainer {
+  max-width: 500px;
+  margin: 40px auto;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1f1f1f;
+}
+
+.subtitle {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.inputField {
+  width: 100%;
+  padding: 14px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+.inputField:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+.checkboxContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  color: #333;
+}
+
+.checkboxLabel input {
+  margin-right: 10px;
+}
+
+.submitButton {
+  width: 100%;
+  padding: 14px;
+  background-color: #000;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.submitButton:hover {
+  background-color: #333;
+}
+
+.textareaField {
+  width: 100%;
+  padding: 14px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  height: 10rem;
+  resize: vertical;
+}
+
+.textareaField:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+.selectField {
+  width: 100%;
+  padding: 14px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.selectField:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+@media (max-width: 600px) {
+  .formContainer {
+    width: 90%;
+    padding: 15px;
+  }
+
+  .title {
+    font-size: 22px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+  }
+
+  .inputField {
+    font-size: 14px;
+    padding: 12px;
+  }
+
+  .submitButton {
+    font-size: 14px;
+    padding: 12px;
+  }
+}
