@@ -29,8 +29,11 @@ async function writeLeads(leads: Lead[]) {
     await fs.writeFile(filePath, JSON.stringify(leads, null, 2), "utf-8");
 }
 
-export async function PUT(req: NextRequest, context: { params: { id: string } }) {
-    const { id } = await context.params;
+export async function PUT(
+    req: NextRequest,
+    { params }: { params: { id: string } }
+) {
+    const { id } = params;
 
     const { status } = await req.json();
 
