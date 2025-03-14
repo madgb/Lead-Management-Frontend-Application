@@ -28,7 +28,7 @@ interface Lead {
     createdAt: string;
 }
 
-export async function readLeads(): Promise<Lead[]> {
+async function readLeads(): Promise<Lead[]> {
     try {
         const data = await fs.readFile(DATA_FILE, "utf-8");
         return data ? JSON.parse(data) : [];

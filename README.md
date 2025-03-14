@@ -32,20 +32,7 @@ A Next.js-based lead management system that allows users to submit leads and adm
 ---
 
 ## 🏗️ System Architecture
-+———————+
-|  Client (Next.js)  |
-+———————+
-│
-▼
-+–––––––––––+
-|  API Routes (Next.js) |
-+–––––––––––+
-│
-▼
-+–––––––––––+
-|   File Upload (S3)  |
-|   JSON DB (FS)      |
-+–––––––––––+
+Client (Next.js) -> API Routes (Next.js) -> JSON DB (FS | src/data/leads.json)
 
 ### **How it Works**
 1. Users submit leads via a **public form** (`/`).
@@ -125,6 +112,10 @@ npm run dev
 
 # Run unit test
 npm run test
+
+# Admin dashboard
+manually add /admin to URL
+Enter password of "admin123" to login
 
 Open http://localhost:3000 in your browser.
 ```
