@@ -40,8 +40,15 @@ async function writeLeads(leads: Lead[]): Promise<void> {
     }
 }
 
-export async function PUT(req: NextRequest, context: { params: Record<string, string> }) {
-    const { id } = context.params;
+export async function PUT(
+    req: NextRequest,
+    { params }: { params: { id: string } }
+) {
+    if (!params || !params.id) {
+        return NextResponse.json({ message: "Invalid request" }, { status: 400 });
+    }
+
+    const { id } = params;
     const { status } = await req.json();
 
     if (status !== "PENDING" && status !== "REACHED_OUT") {
