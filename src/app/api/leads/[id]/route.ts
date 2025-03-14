@@ -3,6 +3,17 @@ import { kv } from "@vercel/kv";
 import { promises as fs } from "fs";
 import path from "path";
 
+interface Lead {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    status: "PENDING" | "REACHED_OUT";
+    citizenship: string;
+    createdAt: string;
+    updatedAt?: string;
+}
+
 const DATA_FILE = path.join(process.cwd(), "src/data/leads.json");
 
 const isVercel = !!process.env.KV_REST_API_URL;
@@ -21,7 +32,7 @@ async function readLeads() {
     }
 }
 
-async function writeLeads(leads: any[]) {
+async function writeLeads(leads: Lead[]): Promise<void> {
     if (isVercel) {
         await kv.set("leads", leads);
     } else {
