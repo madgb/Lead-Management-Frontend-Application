@@ -32,7 +32,7 @@ A Next.js-based lead management system that allows users to submit leads and adm
 ---
 
 ## 🏗️ System Architecture
-Client (Next.js) -> API Routes (Next.js) -> JSON DB (FS | src/data/leads.json)
+Client (Next.js) -> API Routes (Next.js) -> JSON DB (In local - FS | src/data/leads.json) or Vercel KV(In vercel)
 
 ### **How it Works**
 1. Users submit leads via a **public form** (`/`).

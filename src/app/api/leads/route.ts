@@ -1,10 +1,14 @@
-import { promises as fs } from "fs";
-import path from "path";
+import { NextRequest, NextResponse } from "next/server";
 import { IncomingForm, Fields, Files } from "formidable";
 import { v4 as uuidv4 } from "uuid";
-import { NextRequest, NextResponse } from "next/server";
 import { Readable } from "stream";
 import { IncomingMessage } from "http";
+import path from "path";
+import { promises as fs } from "fs";
+
+const isVercel = process.env.VERCEL === "1";
+
+import { kv } from "@vercel/kv";
 
 export const config = {
     api: {
@@ -26,47 +30,49 @@ interface Lead {
     additionalInfo: string;
     status: "PENDING" | "REACHED_OUT";
     createdAt: string;
+    updatedAt?: string;
 }
 
 async function readLeads(): Promise<Lead[]> {
-    try {
-        const data = await fs.readFile(DATA_FILE, "utf-8");
-        return data ? JSON.parse(data) : [];
-    } catch (error) {
-        console.error("❌ Error reading leads file:", error);
-        return [];
+    if (isVercel) {
+        const leads = await kv.get<Lead[]>("leads");
+        return leads ?? [];
+    } else {
+        try {
+            const data = await fs.readFile(DATA_FILE, "utf-8");
+            return JSON.parse(data);
+        } catch (error) {
+            console.error("❌ Error reading leads file:", error);
+            return [];
+        }
     }
 }
 
 async function writeLeads(leads: Lead[]): Promise<void> {
-    await fs.writeFile(DATA_FILE, JSON.stringify(leads, null, 2));
+    if (isVercel) {
+        await kv.set("leads", leads);
+    } else {
+        await fs.writeFile(DATA_FILE, JSON.stringify(leads, null, 2), "utf-8");
+    }
 }
 
 function convertNextRequestToIncomingMessage(req: NextRequest): IncomingMessage {
-    if (!req.body) {
-        throw new Error("Request body is null or undefined");
-    }
+    if (!req.body) throw new Error("Request body is null or undefined");
 
     const reader = req.body.getReader();
-
     const stream = new Readable({
         async read() {
             const { done, value } = await reader.read();
-            if (done) {
-                this.push(null);
-            } else {
-                this.push(Buffer.from(value));
-            }
+            if (done) this.push(null);
+            else this.push(Buffer.from(value));
         },
     });
 
-    const incomingMessage = Object.assign(stream, {
+    return Object.assign(stream, {
         headers: Object.fromEntries(req.headers),
         method: req.method,
         url: req.url,
-    });
-
-    return incomingMessage as IncomingMessage;
+    }) as IncomingMessage;
 }
 
 export async function GET() {
@@ -86,24 +92,24 @@ export async function POST(req: NextRequest) {
                     return reject(NextResponse.json({ message: "File upload error" }, { status: 500 }));
                 }
 
+                const requiredFields = ["firstName", "lastName", "email", "linkedin"];
+                for (const field of requiredFields) {
+                    if (!fields[field] || !fields[field]?.[0]) {
+                        return resolve(NextResponse.json({ message: `Missing required field: ${field}` }, { status: 400 }));
+                    }
+                }
+
                 const file = files.resume?.[0];
                 if (!file) {
                     return resolve(NextResponse.json({ message: "Resume file is required" }, { status: 400 }));
                 }
-
-                if (!fields.firstName || !fields.lastName || !fields.email || !fields.linkedin) {
-                    return resolve(NextResponse.json({ message: "Missing required fields" }, { status: 400 }));
-                }
-
                 const originalFilename = file.originalFilename || "uploaded-file";
                 const newFileName = `${uuidv4()}${path.extname(originalFilename)}`;
                 const newPath = path.join(process.cwd(), "public/uploads", newFileName);
                 await fs.rename(file.filepath, newPath);
 
                 let visas = fields.visasOfInterest?.[0] || "[]";
-                if (!visas.startsWith("[")) {
-                    visas = `[${JSON.stringify(visas)}]`;
-                }
+                if (!visas.startsWith("[")) visas = `[${JSON.stringify(visas)}]`;
                 const parsedVisas: string[] = JSON.parse(visas);
 
                 const newLead: Lead = {
