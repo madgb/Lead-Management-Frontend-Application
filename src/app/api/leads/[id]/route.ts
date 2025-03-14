@@ -29,11 +29,13 @@ async function writeLeads(leads: Lead[]) {
     await fs.writeFile(filePath, JSON.stringify(leads, null, 2), "utf-8");
 }
 
-export async function PUT(
-    req: NextRequest,
-    { params }: { params: { id: string } }
-) {
-    const { id } = params;
+export async function PUT(req: NextRequest) {
+    const url = new URL(req.url);
+    const id = url.pathname.split("/").pop();
+
+    if (!id) {
+        return NextResponse.json({ message: "Missing lead ID" }, { status: 400 });
+    }
 
     const { status } = await req.json();
 
@@ -42,7 +44,7 @@ export async function PUT(
     }
 
     const leads: Lead[] = await readLeads();
-    const leadIndex = leads.findIndex((lead: Lead) => lead.id === id);
+    const leadIndex = leads.findIndex((lead) => lead.id === id);
 
     if (leadIndex === -1) {
         return NextResponse.json({ message: "Lead not found" }, { status: 404 });
