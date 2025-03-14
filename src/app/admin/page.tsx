@@ -17,6 +17,7 @@ interface Lead {
 
 export default function AdminPage() {
     const router = useRouter();
+    const pathname = usePathname();
     const [leads, setLeads] = useState<Lead[]>([]);
     const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
@@ -132,7 +133,6 @@ export default function AdminPage() {
     const indexOfLastLead = currentPage * leadsPerPage;
     const indexOfFirstLead = indexOfLastLead - leadsPerPage;
     const currentLeads = filteredLeads.slice(indexOfFirstLead, indexOfLastLead);
-    const pathname = usePathname();
 
     return (
         <div className={styles.container}>

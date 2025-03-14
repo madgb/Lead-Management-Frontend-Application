@@ -1,6 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
-import { IncomingForm } from "formidable";
+import { IncomingForm, Fields, Files } from "formidable";
 import { v4 as uuidv4 } from "uuid";
 import { NextRequest, NextResponse } from "next/server";
 import { Readable } from "stream";
@@ -14,7 +14,21 @@ export const config = {
 
 const DATA_FILE = path.join(process.cwd(), "src/data/leads.json");
 
-export async function readLeads() {
+interface Lead {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    linkedin: string;
+    citizenship: string;
+    visasOfInterest: string[];
+    resumeUrl: string;
+    additionalInfo: string;
+    status: "PENDING" | "REACHED_OUT";
+    createdAt: string;
+}
+
+export async function readLeads(): Promise<Lead[]> {
     try {
         const data = await fs.readFile(DATA_FILE, "utf-8");
         return data ? JSON.parse(data) : [];
@@ -23,13 +37,30 @@ export async function readLeads() {
         return [];
     }
 }
-async function writeLeads(leads: any[]) {
+
+async function writeLeads(leads: Lead[]): Promise<void> {
     await fs.writeFile(DATA_FILE, JSON.stringify(leads, null, 2));
 }
 
 function convertNextRequestToIncomingMessage(req: NextRequest): IncomingMessage {
-    const readable = Readable.fromWeb(req.body as any);
-    const incomingMessage = Object.assign(readable, {
+    if (!req.body) {
+        throw new Error("Request body is null or undefined");
+    }
+
+    const reader = req.body.getReader();
+
+    const stream = new Readable({
+        async read() {
+            const { done, value } = await reader.read();
+            if (done) {
+                this.push(null);
+            } else {
+                this.push(Buffer.from(value));
+            }
+        },
+    });
+
+    const incomingMessage = Object.assign(stream, {
         headers: Object.fromEntries(req.headers),
         method: req.method,
         url: req.url,
@@ -49,8 +80,8 @@ export async function POST(req: NextRequest) {
     try {
         const incomingReq = convertNextRequestToIncomingMessage(req);
 
-        return new Promise((resolve, reject) => {
-            form.parse(incomingReq, async (err, fields, files) => {
+        return new Promise<NextResponse>((resolve, reject) => {
+            form.parse(incomingReq, async (err: Error | null, fields: Fields, files: Files) => {
                 if (err) {
                     return reject(NextResponse.json({ message: "File upload error" }, { status: 500 }));
                 }
@@ -61,7 +92,7 @@ export async function POST(req: NextRequest) {
                 }
 
                 if (!fields.firstName || !fields.lastName || !fields.email || !fields.linkedin) {
-                    return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
+                    return resolve(NextResponse.json({ message: "Missing required fields" }, { status: 400 }));
                 }
 
                 const originalFilename = file.originalFilename || "uploaded-file";
@@ -73,9 +104,9 @@ export async function POST(req: NextRequest) {
                 if (!visas.startsWith("[")) {
                     visas = `[${JSON.stringify(visas)}]`;
                 }
-                const parsedVisas = JSON.parse(visas);
+                const parsedVisas: string[] = JSON.parse(visas);
 
-                const newLead = {
+                const newLead: Lead = {
                     id: uuidv4(),
                     firstName: fields.firstName?.[0] || "Unknown",
                     lastName: fields.lastName?.[0] || "Unknown",
@@ -97,6 +128,6 @@ export async function POST(req: NextRequest) {
             });
         });
     } catch (error) {
-        return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({ message: `Internal Server Error: ${error}` }, { status: 500 });
     }
 }

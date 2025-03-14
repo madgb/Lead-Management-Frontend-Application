@@ -6,7 +6,8 @@ import { materialRenderers, materialCells } from "@jsonforms/material-renderers"
 import { useRouter } from "next/navigation";
 import { leadFormSchema } from "../models/leadFormSchema";
 import { leadUiSchema } from "../models/leadUiSchema";
-import { JsonFormsRendererRegistryEntry } from "@jsonforms/core";
+import { JsonFormsRendererRegistryEntry, UISchemaElement, ControlElement } from "@jsonforms/core";
+
 import FileUpload from "../components/FileUpload";
 import TextAreaRenderer from "../components/TextAreaRenderer";
 
@@ -14,8 +15,16 @@ import styles from "./lead-form.module.css";
 
 const customRenderers: JsonFormsRendererRegistryEntry[] = [
   ...materialRenderers,
-  { tester: (uischema) => ((uischema as any)?.scope === "#/properties/resume" ? 2 : -1), renderer: FileUpload },
-  { tester: (uischema) => ((uischema as any)?.scope === "#/properties/additionalInfo" ? 2 : -1), renderer: TextAreaRenderer },
+  {
+    tester: (uischema: UISchemaElement) =>
+      (uischema as ControlElement).scope === "#/properties/resume" ? 2 : -1,
+    renderer: FileUpload,
+  },
+  {
+    tester: (uischema: UISchemaElement) =>
+      (uischema as ControlElement).scope === "#/properties/additionalInfo" ? 2 : -1,
+    renderer: TextAreaRenderer,
+  },
 ];
 
 export default function Page() {
@@ -54,7 +63,7 @@ export default function Page() {
       }
 
       router.push("/thank-you");
-    } catch (error) {
+    } catch {
       setErrorMessage("Failed to submit the form. Please try again.");
     } finally {
       setIsSubmitting(false);

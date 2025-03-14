@@ -20,6 +20,7 @@ async function readLeads(): Promise<Lead[]> {
         const data = await fs.readFile(filePath, "utf-8");
         return JSON.parse(data);
     } catch (error) {
+        console.error(error);
         return [];
     }
 }
@@ -37,7 +38,7 @@ export async function PUT(req: NextRequest, context: { params: { id: string } })
         return NextResponse.json({ message: "Invalid status" }, { status: 400 });
     }
 
-    let leads: Lead[] = await readLeads();
+    const leads: Lead[] = await readLeads();
     const leadIndex = leads.findIndex((lead: Lead) => lead.id === id);
 
     if (leadIndex === -1) {

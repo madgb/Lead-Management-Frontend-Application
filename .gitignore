@@ -48,3 +48,4 @@ firestore.rules.bak
 
 
 .msw/
+.vercel

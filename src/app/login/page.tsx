@@ -24,7 +24,7 @@ export default function LoginPage() {
       }
 
       router.push("/admin");
-    } catch (error) {
+    } catch {
       setError("Invalid password. Try again.");
     }
   };
