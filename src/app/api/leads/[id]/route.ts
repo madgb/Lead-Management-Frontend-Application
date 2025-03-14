@@ -42,9 +42,9 @@ async function writeLeads(leads: Lead[]): Promise<void> {
 
 export async function PUT(
     req: NextRequest,
-    context: { params: { id: string } }
+    { params }: { params: Record<string, string> }
 ) {
-    const { id } = context.params;
+    const { id } = params;
     const { status } = await req.json();
 
     if (status !== "PENDING" && status !== "REACHED_OUT") {
