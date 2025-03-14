@@ -118,4 +118,6 @@ manually add /admin to URL
 Enter password of "admin123" to login
 
 Open http://localhost:3000 in your browser.
+
+Live in vercel https://lead-management-cnp3g8qsy-woobin-huhs-projects.vercel.app/
 ```
