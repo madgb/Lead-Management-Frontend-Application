@@ -3,7 +3,7 @@ import { kv } from "@vercel/kv";
 import { promises as fs } from "fs";
 import path from "path";
 
-interface Lead {
+export interface Lead {
     id: string;
     firstName: string;
     lastName: string;
@@ -24,7 +24,7 @@ async function readLeads(): Promise<Lead[]> {
     } else {
         try {
             const data = await fs.readFile(DATA_FILE, "utf-8");
-            return JSON.parse(data) as Lead[];
+            return JSON.parse(data);
         } catch (error) {
             console.error("❌ Error reading leads file:", error);
             return [];
@@ -40,11 +40,8 @@ async function writeLeads(leads: Lead[]): Promise<void> {
     }
 }
 
-export async function PUT(
-    req: NextRequest,
-    { params }: { params: { id: string } }
-) {
-    const { id } = params;
+export async function PUT(req: NextRequest, context: { params: Record<string, string> }) {
+    const { id } = context.params;
     const { status } = await req.json();
 
     if (status !== "PENDING" && status !== "REACHED_OUT") {
