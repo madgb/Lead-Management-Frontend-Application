@@ -18,13 +18,13 @@ const DATA_FILE = path.join(process.cwd(), "src/data/leads.json");
 
 const isVercel = !!process.env.KV_REST_API_URL;
 
-async function readLeads() {
+async function readLeads(): Promise<Lead[]> {
     if (isVercel) {
-        return (await kv.get<{ id: string; status: string; updatedAt?: string }[]>("leads")) || [];
+        return (await kv.get<Lead[]>("leads")) || [];
     } else {
         try {
             const data = await fs.readFile(DATA_FILE, "utf-8");
-            return JSON.parse(data);
+            return JSON.parse(data) as Lead[];
         } catch (error) {
             console.error("❌ Error reading leads file:", error);
             return [];
@@ -42,9 +42,9 @@ async function writeLeads(leads: Lead[]): Promise<void> {
 
 export async function PUT(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: { id: string } }
 ) {
-    const { id } = params;
+    const { id } = context.params;
     const { status } = await req.json();
 
     if (status !== "PENDING" && status !== "REACHED_OUT") {
@@ -52,7 +52,7 @@ export async function PUT(
     }
 
     const leads = await readLeads();
-    const leadIndex = leads.findIndex((lead: { id: string }) => lead.id === id);
+    const leadIndex = leads.findIndex((lead) => lead.id === id);
 
     if (leadIndex === -1) {
         return NextResponse.json({ message: "Lead not found" }, { status: 404 });
